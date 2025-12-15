@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GreenLeaf Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{box-sizing:border-box;font-family:Segoe UI,Arial,sans-serif}
+body{margin:0;background:#f3f6f4}
+
+/* LOGIN */
+.login{
+  height:100vh;display:flex;justify-content:center;align-items:center
+}
+.login-box{
+  background:#fff;padding:2.5rem;border-radius:18px;
+  box-shadow:0 12px 35px rgba(0,0,0,.15);
+  text-align:center
+}
+.login-box h2{color:#1b5e20}
+.login-box button{
+  padding:.8rem 1.8rem;border:none;border-radius:12px;
+  background:#1b5e20;color:white;font-size:1rem;cursor:pointer
+}
+.hidden{display:none}
+
+/* HEADER */
+.header{
+  background:white;padding:1rem 2rem;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:0 4px 15px rgba(0,0,0,.1)
+}
+.header h2{color:#1b5e20}
+.header button{
+  padding:.5rem 1rem;border:none;border-radius:8px;
+  background:#c62828;color:white;cursor:pointer
+}
+
+/* DASHBOARD */
+.dashboard{padding:2rem}
+.cards{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:1.2rem;margin-bottom:2rem
+}
+.card{
+  background:white;padding:1.2rem;border-radius:16px;
+  box-shadow:0 8px 25px rgba(0,0,0,.1)
+}
+.card h3{margin:0;color:#1b5e20}
+.card p{font-size:1.5rem;font-weight:bold}
+
+/* FILTER BAR */
+.filters{
+  display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap
+}
+.filters input,.filters select{
+  padding:.7rem;border-radius:10px;border:1px solid #ccc
+}
+
+/* MAIN */
+.main{
+  display:grid;grid-template-columns:2fr 1fr;gap:20px
+}
+
+/* ORDERS */
+.orders{
+  background:white;border-radius:18px;padding:1rem;
+  box-shadow:0 10px 30px rgba(0,0,0,.12)
+}
+.order{
+  display:flex;justify-content:space-between;align-items:center;
+  background:#f9faf9;padding:12px;border-radius:12px;
+  margin-bottom:10px
+}
+.order strong{display:block}
+.small{font-size:.85rem;color:#555}
+
+/* STATUS */
+.pending{color:#f59e0b;font-weight:bold}
+.accepted{color:#16a34a;font-weight:bold}
+.shipped{color:#2563eb;font-weight:bold}
+.rejected{color:#dc2626;font-weight:bold}
+
+/* BUTTONS */
+.btns button{
+  border:none;border-radius:8px;padding:6px 10px;
+  margin-left:4px;font-size:.75rem;cursor:pointer
+}
+.view{background:#e5e7eb}
+.accept{background:#d1fae5}
+.ship{background:#bfdbfe}
+.reject{background:#fee2e2}
+.delete{background:#ef4444;color:white}
+
+/* SIDE */
+.side{
+  background:white;border-radius:18px;padding:1.2rem;
+  box-shadow:0 10px 30px rgba(0,0,0,.12)
+}
+.side{
+  background:white;border-radius:18px;padding:1.2rem;
+  box-shadow:0 10px 30px rgba(0,0,0,.12)
+}
+/* INVENTORY INPUTS */
+.orders input{
+  width:100%;
+  padding:.7rem;
+  margin:.4rem 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
+.header button{
+  margin-left:8px;
+}
+/* ================= INVENTORY PROFESSIONAL UI ================= */
+
+.inventory-header{
+  padding:2rem;
+}
+.inventory-header h2{
+  margin:0;
+  color:#1b5e20;
+}
+.inventory-header p{
+  margin:.3rem 0 0;
+  color:#555;
+  font-size:.9rem;
+}
+
+.inventory-grid{
+  display:grid;
+  grid-template-columns:1fr 1.4fr;
+  gap:25px;
+  padding:0 2rem 2rem;
+}
+
+.inventory-card{
+  background:white;
+  padding:1.6rem;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.12);
+}
+
+.inventory-card h3{
+  margin-top:0;
+  margin-bottom:1rem;
+  color:#1b5e20;
+}
+
+.inventory-card label{
+  display:block;
+  font-size:.85rem;
+  color:#555;
+  margin-top:.8rem;
+}
+
+.inventory-card input{
+  width:100%;
+  padding:.7rem;
+  margin-top:.3rem;
+  border-radius:10px;
+  border:1px solid #ccc;
+  outline:none;
+}
+
+.inventory-card input:focus{
+  border-color:#1b5e20;
+}
+
+.inventory-save{
+  margin-top:1.2rem;
+  width:100%;
+  padding:.8rem;
+  border:none;
+  border-radius:12px;
+  background:#1b5e20;
+  color:white;
+  font-size:1rem;
+  cursor:pointer;
+}
+
+.inventory-save:hover{
+  background:#145a18;
+}
+
+/* plant rows */
+#plantsList .order{
+  background:#f9faf9;
+  border-radius:12px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login">
+  <div class="login-box">
+    <h2>🌿 GreenLeaf Admin</h2>
+    <p>Sign in with Google</p>
+    <button onclick="googleLogin()">Sign in with Google</button>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="admin" class="hidden">
+</div><div class="header">
+  <h2>GreenLeaf Admin Dashboard</h2>
+
+  <div style="display:flex;gap:10px">
+    <button onclick="openOrders()" style="background:#1b5e20;color:white">
+      Orders
+    </button>
+
+    <button onclick="openInventory()" style="background:#2e7d32;color:white">
+      Inventory
+    </button>
+
+    <button onclick="logout()" style="background:#c62828;color:white">
+      Logout
+    </button>
+  </div>
+</div>
+
+
+<div class="dashboard">
+
+<div class="cards">
+  <div class="card"><h3>Total Orders</h3><p id="tTotal">0</p></div>
+  <div class="card"><h3>Pending</h3><p id="tPending">0</p></div>
+  <div class="card"><h3>Accepted</h3><p id="tAccepted">0</p></div>
+  <div class="card"><h3>Shipped</h3><p id="tShipped">0</p></div>
+</div>
+
+<div class="filters">
+  <input id="search" placeholder="Search name / phone">
+  <select id="filter">
+    <option value="all">All Status</option>
+    <option value="pending">Pending</option>
+    <option value="accepted">Accepted</option>
+    <option value="shipped">Shipped</option>
+    <option value="rejected">Rejected</option>
+  </select>
+</div>
+
+<div class="main">
+
+<div class="orders">
+  <h3>Orders</h3>
+  <div id="ordersList">Loading…</div>
+</div>
+
+<div class="side">
+  <h3>Order Details</h3>
+  <div id="details">Select an order</div>
+</div>
+
+</div>
+</div>
+</div>
+<div id="inventorySection" class="hidden">
+
+  <div class="inventory-header">
+    <h2>🌱 Inventory Management</h2>
+    <p>Manage plants, pricing and stock</p>
+  </div>
+
+  <div class="inventory-grid">
+
+    <!-- FORM CARD -->
+    <div class="inventory-card">
+      <h3>Add / Update Plant</h3>
+
+      <label>Plant Name</label>
+      <input id="pName" placeholder="e.g. Money Plant">
+
+      <label>Price (₹)</label>
+      <input id="pPrice" type="number" placeholder="299">
+
+      <label>Stock Quantity</label>
+      <input id="pStock" type="number" placeholder="50">
+
+      <label>Category</label>
+      <input id="pCategory" placeholder="Indoor / Outdoor">
+
+      <label>Image URL</label>
+      <input id="pImage" placeholder="https://image-url">
+
+      <button class="inventory-save" onclick="addPlant()">
+        Save Plant
+      </button>
+    </div>
+
+    <!-- LIST CARD -->
+    <div class="inventory-card">
+      <h3>Plants List</h3>
+      <div id="plantsList">Loading plants…</div>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ================= FIREBASE INIT ================= */
+firebase.initializeApp({
+  apiKey:"AIzaSyBJXO-TsCpd0dlV5LO84RG0yJv2_zKFEoU",
+  authDomain:"money-plant-9b247.firebaseapp.com",
+  projectId:"money-plant-9b247"
+});
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+/* ================= GLOBALS ================= */
+let orders=[];
+
+/* ================= AUTH ================= */
+function googleLogin(){
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .catch(e=>alert(e.message));
+}
+function logout(){auth.signOut();}
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    login.classList.add("hidden");
+    admin.classList.remove("hidden");
+    loadOrders();
+  }else{
+    admin.classList.add("hidden");
+    login.classList.remove("hidden");
+  }
+});
+
+/* ================= LOAD ORDERS ================= */
+async function loadOrders(){
+  const snap=await db.collection("orders").get();
+  orders=[];
+  snap.forEach(doc=>{
+    const data=doc.data();
+    orders.push({
+      id:doc.id,
+      status:data.status || "pending", // FIX FOR OLD ORDERS
+      ...data
+    });
+  });
+  updateStats();
+  renderOrders();
+}
+
+/* ================= STATS ================= */
+function updateStats(){
+  tTotal.innerText=orders.length;
+  tPending.innerText=orders.filter(o=>o.status==="pending").length;
+  tAccepted.innerText=orders.filter(o=>o.status==="accepted").length;
+  tShipped.innerText=orders.filter(o=>o.status==="shipped").length;
+}
+
+/* ================= RENDER ================= */
+function renderOrders(){
+  const q=(search.value||"").toLowerCase();
+  const f=filter.value||"all";
+  ordersList.innerHTML="";
+
+  const list=orders.filter(o=>
+    (f==="all"||o.status===f) &&
+    (o.customer?.name?.toLowerCase().includes(q) ||
+     o.customer?.phone?.includes(q))
+  );
+
+  if(list.length===0){
+    ordersList.innerHTML="<p>No orders found</p>";
+    return;
+  }
+
+  list.forEach(o=>{
+    ordersList.innerHTML+=`
+      <div class="order">
+        <div>
+          <strong>ORD-${o.id.slice(0,8)} · ₹${o.totalAmount}</strong>
+          <span class="small">${o.customer.name} · ${o.customer.phone}</span><br>
+          <span class="${o.status}">${o.status.toUpperCase()}</span>
+        </div>
+        <div class="btns">
+          <button class="view" onclick="viewOrder('${o.id}')">View</button>
+          <button class="accept" onclick="updateStatus('${o.id}','accepted')">Accept</button>
+          <button class="ship" onclick="updateStatus('${o.id}','shipped')">Ship</button>
+          <button class="reject" onclick="updateStatus('${o.id}','rejected')">Reject</button>
+          <button class="delete" onclick="deleteOrder('${o.id}')">Delete</button>
+        </div>
+      </div>`;
+  });
+}
+
+/* ================= VIEW ================= */
+function viewOrder(id){
+  const o=orders.find(x=>x.id===id);
+  details.innerHTML=`
+    <strong>${o.customer.name}</strong><br>
+    📞 ${o.customer.phone}<br>
+    📧 ${o.customer.email||""}<br>
+    📍 ${o.address.city}, ${o.address.state}<br>
+    💳 ${o.paymentMethod}<br>
+    💰 ₹${o.totalAmount}<br><br>
+    <ul>${o.items.map(i=>`<li>${i.name} × ${i.qty}</li>`).join("")}</ul>`;
+}
+
+/* ================= WHATSAPP ================= */
+function sendWhatsApp(o,s){
+  const msg=`Hello ${o.customer.name} 🌱\nYour GreenLeaf order (ORD-${o.id.slice(0,8)}) is ${s.toUpperCase()}.`;
+  window.open(`https://wa.me/91${o.customer.phone}?text=`+encodeURIComponent(msg));
+}
+
+/* ================= UPDATE ================= */
+async function updateStatus(id,s){
+  const o=orders.find(x=>x.id===id);
+  await db.collection("orders").doc(id).update({status:s});
+  sendWhatsApp(o,s);
+  loadOrders();
+}
+
+/* ================= DELETE ================= */
+async function deleteOrder(id){
+  if(confirm("Delete order?")){
+    await db.collection("orders").doc(id).delete();
+    loadOrders();
+  }
+}
+
+/* ================= EVENTS ================= */
+search.oninput=renderOrders;
+filter.onchange=renderOrders;
+/* ================= TOGGLE SECTIONS ================= */
+function openInventory(){
+  document.querySelector(".dashboard").classList.add("hidden");
+  inventorySection.classList.remove("hidden");
+}
+
+function openOrders(){
+  inventorySection.classList.add("hidden");
+  document.querySelector(".dashboard").classList.remove("hidden");
+}
+
+</script>
+<script>
+/* ================= PLANTS INVENTORY ================= */
+let plants = [];
+let editPlantId = null;
+
+/* REALTIME LISTENER */
+db.collection("plants")
+  .onSnapshot(snap=>{
+    plants = [];
+    snap.forEach(doc=>{
+      plants.push({ id: doc.id, ...doc.data() });
+    });
+    renderPlants();
+  });
+
+
+/* ADD / UPDATE PLANT */
+async function addPlant(){
+  try{
+    const plant = {
+      name: pName.value.trim(),
+      price: Number(pPrice.value),
+      stock: Number(pStock.value),
+      category: pCategory.value.trim(),
+      image: pImage.value.trim()
+    };
+
+    if(!plant.name || !plant.price){
+      alert("Plant name and price required");
+      return;
+    }
+
+    if(editPlantId){
+      await db.collection("plants").doc(editPlantId).update(plant);
+      editPlantId = null;
+    }else{
+     await db.collection("plants").add({
+  ...plant,
+  createdAt: firebase.firestore.FieldValue.serverTimestamp()
+});
+    }
+
+    pName.value = "";
+    pPrice.value = "";
+    pStock.value = "";
+    pCategory.value = "";
+    pImage.value = "";
+
+    alert("✅ Plant saved successfully");
+
+  }catch(err){
+    alert("❌ Error: " + err.message);
+    console.error(err);
+  }
+}
+
+/* RENDER PLANTS */
+function renderPlants(){
+  plantsList.innerHTML = "";
+  if(!plants.length){
+    plantsList.innerHTML="<p>No plants added</p>";
+    return;
+  }
+
+  plants.forEach(p=>{
+    plantsList.innerHTML += `
+      <div class="order">
+        <div>
+          <strong>${p.name}</strong>
+          <span class="small">₹${p.price} · Stock: ${p.stock}</span><br>
+          <span class="small">${p.category}</span>
+        </div>
+        <div class="btns">
+          <button class="view" onclick="editPlant('${p.id}')">Edit</button>
+          <button class="delete" onclick="deletePlant('${p.id}')">Delete</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+/* EDIT */
+function editPlant(id){
+  const p = plants.find(x=>x.id===id);
+  if(!p) return;
+  editPlantId = id;
+  pName.value = p.name;
+  pPrice.value = p.price;
+  pStock.value = p.stock;
+  pCategory.value = p.category;
+  pImage.value = p.image;
+}
+
+/* DELETE */
+async function deletePlant(id){
+  if(confirm("Delete this plant?")){
+    await db.collection("plants").doc(id).delete();
+  }
+}
+function openInventory(){
+  document.getElementById("inventorySection").classList.remove("hidden");
+  document.querySelector(".dashboard").classList.add("hidden");
+}
+
+function openOrders(){
+  document.getElementById("inventorySection").classList.add("hidden");
+  document.querySelector(".dashboard").classList.remove("hidden");
+}
+
+</script>
+
+</body>
+</html>
