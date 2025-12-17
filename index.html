@@ -189,6 +189,65 @@ body{margin:0;background:#f3f6f4}
   background:#f9faf9;
   border-radius:12px;
 }
+.delivered{
+  color:#0f766e;
+  font-weight:bold;
+}
+
+/* ================= VIEW ORDER PANEL ================= */
+
+#details{
+  background:#f9faf9;
+  padding:1.2rem;
+  border-radius:14px;
+  line-height:1.6;
+  font-size:.95rem;
+  color:#333;
+}
+
+/* Customer name */
+#details strong{
+  font-size:1.05rem;
+  color:#1b5e20;
+  display:block;
+  margin-bottom:.4rem;
+}
+
+/* Info rows */
+#details br{
+  line-height:1.8;
+}
+
+/* Items list */
+#details ul{
+  padding-left:18px;
+  margin:10px 0 0;
+}
+
+#details li{
+  margin-bottom:6px;
+  font-size:.9rem;
+}
+
+/* Icons spacing */
+#details span,
+#details div{
+  display:block;
+}
+
+/* Empty state */
+#details:empty{
+  color:#777;
+  font-style:italic;
+}
+
+/* ================= MOBILE OPTIMIZATION ================= */
+@media(max-width:768px){
+  #details{
+    padding:1rem;
+    font-size:.9rem;
+  }
+}
 
 </style>
 </head>
@@ -231,6 +290,8 @@ body{margin:0;background:#f3f6f4}
   <div class="card"><h3>Pending</h3><p id="tPending">0</p></div>
   <div class="card"><h3>Accepted</h3><p id="tAccepted">0</p></div>
   <div class="card"><h3>Shipped</h3><p id="tShipped">0</p></div>
+  <div class="card"><h3>Delivered</h3><p id="tDelivered">0</p></div>
+
 </div>
 
 <div class="filters">
@@ -241,6 +302,8 @@ body{margin:0;background:#f3f6f4}
     <option value="accepted">Accepted</option>
     <option value="shipped">Shipped</option>
     <option value="rejected">Rejected</option>
+    <option value="delivered">Delivered</option>
+
   </select>
 </div>
 
@@ -343,72 +406,75 @@ auth.onAuthStateChanged(user=>{
 });
 
 /* ================= LOAD ORDERS ================= */
-async function loadOrders(){
-  const snap = await db.collection("orders").get();
-  orders = [];
+function loadOrders(){
+  db.collection("orders")
+    .orderBy("createdAt", "desc")
+    .onSnapshot(snap => {
 
-  snap.forEach(doc=>{
-    const d = doc.data();
+      orders = [];
 
-    orders.push({
-      id: doc.id,
-      status: d.status || "pending",
+      snap.forEach(doc => {
+        const d = doc.data();
 
-      // ✅ CUSTOMER MAPPING (FIX)
-      customer: {
-        name:
-          d.customer?.name ||
-          d.name ||
-          d.customerName ||
-          "Unknown",
+        orders.push({
+          id: doc.id,
+          status: d.status || "pending",
 
-        phone:
-          d.customer?.phone ||
-          d.phone ||
-          d.customerPhone ||
-          "N/A",
+          customer: {
+            name:
+              d.customer?.name ||
+              d.name ||
+              d.fullName ||
+              d.username ||
+              d.customerName ||
+              "Unknown",
 
-        email:
-          d.customer?.email ||
-          d.email ||
-          d.customerEmail ||
-          ""
-      },
+            phone:
+              d.customer?.phone ||
+              d.phone ||
+              d.mobile ||
+              d.mobileNumber ||
+              d.customerPhone ||
+              "N/A",
 
-      // ✅ ADDRESS MAPPING (FIX)
-      address: {
-        city:
-          d.address?.city ||
-          d.city ||
-          d.shippingAddress?.city ||
-          "",
+            email:
+              d.customer?.email ||
+              d.email ||
+              ""
+          },
 
-        state:
-          d.address?.state ||
-          d.state ||
-          d.shippingAddress?.state ||
-          ""
-      },
+          address: {
+            city:
+              d.address?.city ||
+              d.city ||
+              d.shippingAddress?.city ||
+              "",
 
-      // ✅ ITEMS SAFE
-      items: Array.isArray(d.items) ? d.items : [],
+            state:
+              d.address?.state ||
+              d.state ||
+              d.shippingAddress?.state ||
+              ""
+          },
 
-      totalAmount: d.totalAmount || d.total || 0,
-      paymentMethod: d.paymentMethod || d.payment || "N/A"
+          items: Array.isArray(d.items) ? d.items : [],
+          totalAmount: d.totalAmount || d.total || 0,
+          paymentMethod: d.paymentMethod || d.payment || "N/A"
+        });
+      });
+
+      updateStats();
+      renderOrders();
     });
-  });
-
-  updateStats();
-  renderOrders();
 }
 
-
 /* ================= STATS ================= */
-function updateStats(){
-  tTotal.innerText=orders.length;
-  tPending.innerText=orders.filter(o=>o.status==="pending").length;
-  tAccepted.innerText=orders.filter(o=>o.status==="accepted").length;
-  tShipped.innerText=orders.filter(o=>o.status==="shipped").length;
+  function updateStats(){
+  tTotal.innerText = orders.length;
+  tPending.innerText = orders.filter(o=>o.status==="pending").length;
+  tAccepted.innerText = orders.filter(o=>o.status==="accepted").length;
+  tShipped.innerText = orders.filter(o=>o.status==="shipped").length;
+  tDelivered.innerText = orders.filter(o=>o.status==="delivered").length;
 }
 
 /* ================= RENDER ================= */
@@ -440,13 +506,15 @@ function renderOrders(){
           </span><br>
           <span class="${o.status}">${o.status.toUpperCase()}</span>
         </div>
-        <div class="btns">
-          <button class="view" onclick="viewOrder('${o.id}')">View</button>
-          <button class="accept" onclick="updateStatus('${o.id}','accepted')">Accept</button>
-          <button class="ship" onclick="updateStatus('${o.id}','shipped')">Ship</button>
-          <button class="reject" onclick="updateStatus('${o.id}','rejected')">Reject</button>
-          <button class="delete" onclick="deleteOrder('${o.id}')">Delete</button>
-        </div>
+<div class="btns">
+  <button class="view" onclick="viewOrder('${o.id}')">View</button>
+  <button class="accept" onclick="updateStatus('${o.id}','accepted')">Accept</button>
+  <button class="ship" onclick="updateStatus('${o.id}','shipped')">Ship</button>
+  <button class="ship" onclick="updateStatus('${o.id}','delivered')">Delivered</button>
+  <button class="reject" onclick="updateStatus('${o.id}','rejected')">Reject</button>
+  <button class="delete" onclick="deleteOrder('${o.id}')">Delete</button>
+</div>
+
       </div>
     `;
   });
@@ -505,14 +573,12 @@ async function updateStatus(id,s){
   const o=orders.find(x=>x.id===id);
   await db.collection("orders").doc(id).update({status:s});
   sendWhatsApp(o,s);
-  loadOrders();
 }
 
 /* ================= DELETE ================= */
 async function deleteOrder(id){
   if(confirm("Delete order?")){
     await db.collection("orders").doc(id).delete();
-    loadOrders();
   }
 }
 
