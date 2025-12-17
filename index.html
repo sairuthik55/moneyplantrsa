@@ -283,6 +283,9 @@ body{margin:0;background:#f3f6f4}
 
       <label>Category</label>
       <input id="pCategory" placeholder="Indoor / Outdoor">
+      
+      <label>Description</label>
+<input id="pDesc" placeholder="Short plant description & care tips">
 
       <label>Image URL</label>
       <input id="pImage" placeholder="https://image-url">
@@ -473,10 +476,29 @@ function viewOrder(id){
 
 
 /* ================= WHATSAPP ================= */
-function sendWhatsApp(o,s){
-  const msg=`Hello ${o.customer.name} 🌱\nYour GreenLeaf order (ORD-${o.id.slice(0,8)}) is ${s.toUpperCase()}.`;
-  window.open(`https://wa.me/91${o.customer.phone}?text=`+encodeURIComponent(msg));
+function sendWhatsApp(o, status) {
+  if (!o.customer.phone) {
+    alert("Customer phone number missing");
+    return;
+  }
+
+  // 🔧 Clean phone number (remove spaces, +, etc.)
+  const phone = o.customer.phone.replace(/\D/g, "");
+
+  const message =
+    `Hello ${o.customer.name || "Customer"} 🌱\n` +
+    `Your GreenLeaf order (ORD-${o.id.slice(0, 8)}) has been ${status.toUpperCase()}.\n` +
+    `Thank you for shopping with GreenLeaf!`;
+
+  const url =
+    "https://wa.me/91" +
+    phone +
+    "?text=" +
+    encodeURIComponent(message);
+
+  window.open(url, "_blank");
 }
+
 
 /* ================= UPDATE ================= */
 async function updateStatus(id,s){
@@ -528,13 +550,16 @@ db.collection("plants")
 /* ADD / UPDATE PLANT */
 async function addPlant(){
   try{
-    const plant = {
-      name: pName.value.trim(),
-      price: Number(pPrice.value),
-      stock: Number(pStock.value),
-      category: pCategory.value.trim(),
-      image: pImage.value.trim()
-    };
+  const plant = {
+  name: pName.value.trim(),
+  price: Number(pPrice.value),
+  stock: Number(pStock.value),
+  category: pCategory.value.trim(),
+  image: pImage.value.trim(),
+  description: pDesc.value.trim(),
+  sameDay: true   // ✅ SAME DAY DELIVERY FLAG
+};
+
 
     if(!plant.name || !plant.price){
       alert("Plant name and price required");
