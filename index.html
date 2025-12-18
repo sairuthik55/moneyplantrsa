@@ -266,9 +266,14 @@ body{margin:0;background:#f3f6f4}
 <!-- ADMIN DASHBOARD -->
 <div id="admin" class="hidden">
 </div><div class="header">
-  <h2>GreenLeaf Admin Dashboard</h2>
+  <div>
+    <h2>GreenLeaf Admin Dashboard</h2>
+    <small id="adminName" style="color:#555;font-size:.85rem">
+      Logged in as Admin
+    </small>
+  </div>
 
-  <div style="display:flex;gap:10px">
+  <div style="display:flex;gap:10px;align-items:center">
     <button onclick="openOrders()" style="background:#1b5e20;color:white">
       Orders
     </button>
@@ -411,6 +416,12 @@ auth.onAuthStateChanged(user=>{
   if(user){
     login.classList.add("hidden");
     admin.classList.remove("hidden");
+
+    // ✅ DISPLAY ADMIN NAME
+    const name = user.displayName || user.email;
+    document.getElementById("adminName").innerText =
+      "👤 " + name;
+
     loadOrders();
   }else{
     admin.classList.add("hidden");
@@ -456,19 +467,44 @@ function loadOrders(){
               ""
           },
 
-          address: {
-            city:
-              d.address?.city ||
-              d.city ||
-              d.shippingAddress?.city ||
-              "",
+         address: {
+  house:
+    d.address?.house ||
+    d.address?.line1 ||
+    d.house ||
+    d.flat ||
+    "",
 
-            state:
-              d.address?.state ||
-              d.state ||
-              d.shippingAddress?.state ||
-              ""
-          },
+  street:
+    d.address?.street ||
+    d.address?.line2 ||
+    d.street ||
+    "",
+
+  area:
+    d.address?.area ||
+    d.locality ||
+    "",
+
+  city:
+    d.address?.city ||
+    d.city ||
+    d.shippingAddress?.city ||
+    "",
+
+  state:
+    d.address?.state ||
+    d.state ||
+    d.shippingAddress?.state ||
+    "",
+
+  pincode:
+    d.address?.pincode ||
+    d.pincode ||
+    d.zip ||
+    ""
+}
+,
 
           items: Array.isArray(d.items) ? d.items : [],
           totalAmount: d.totalAmount || d.total || 0,
@@ -576,7 +612,13 @@ function viewOrder(id){
     <strong>${o.customer.name || "Unknown Customer"}</strong><br>
     📞 ${o.customer.phone || "N/A"}<br>
     📧 ${o.customer.email || ""}<br>
-    📍 ${(o.address.city || "")} ${(o.address.state || "")}<br>
+    📍 <strong>delivery address</strong><br>
+${o.address.house ? o.address.house + "," : ""}
+${o.address.street ? o.address.street + "," : ""}
+${o.address.area ? o.address.area + "," : ""}<br>
+${o.address.city ? o.address.city + "," : ""}
+${o.address.state ? o.address.state + " -" : ""}
+${o.address.pincode || ""}<br>
     💳 ${o.paymentMethod}<br>
     💰 ₹${o.totalAmount}<br><br>
     <ul>
