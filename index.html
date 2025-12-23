@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GreenLeaf Admin Dashboard</title>
+<title>Instaplant Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -257,7 +257,7 @@ body{margin:0;background:#f3f6f4}
 <!-- LOGIN -->
 <div id="login" class="login">
   <div class="login-box">
-    <h2>🌿 GreenLeaf Admin</h2>
+    <h2>🌿 Instaplant Admin</h2>
     <p>Sign in with Google</p>
     <button onclick="googleLogin()">Sign in with Google</button>
   </div>
@@ -265,28 +265,31 @@ body{margin:0;background:#f3f6f4}
 
 <!-- ADMIN DASHBOARD -->
 <div id="admin" class="hidden">
-</div><div class="header">
-  <div>
-    <h2>GreenLeaf Admin Dashboard</h2>
-    <small id="adminName" style="color:#555;font-size:.85rem">
-      Logged in as Admin
-    </small>
+
+  <div class="header">
+    <div>
+      <h2>GreenLeaf Admin Dashboard</h2>
+      <small id="adminName" style="color:#555;font-size:.85rem">
+        Logged in as Admin
+      </small>
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center">
+      <button onclick="openOrders()" style="background:#1b5e20;color:white">
+        Orders
+      </button>
+
+      <button onclick="openInventory()" style="background:#2e7d32;color:white">
+        Inventory
+      </button>
+
+      <button onclick="logout()" style="background:#c62828;color:white">
+        Logout
+      </button>
+    </div>
   </div>
+</div> <!-- end of #admin -->
 
-  <div style="display:flex;gap:10px;align-items:center">
-    <button onclick="openOrders()" style="background:#1b5e20;color:white">
-      Orders
-    </button>
-
-    <button onclick="openInventory()" style="background:#2e7d32;color:white">
-      Inventory
-    </button>
-
-    <button onclick="logout()" style="background:#c62828;color:white">
-      Logout
-    </button>
-  </div>
-</div>
 
 
 <div class="dashboard">
@@ -366,7 +369,10 @@ body{margin:0;background:#f3f6f4}
       <input id="pCategory" placeholder="Indoor / Outdoor">
       
       <label>Description</label>
-<input id="pDesc" placeholder="Short plant description & care tips">
+<input id="pDesc" placeholder="Short plant description">
+
+<label>Care Tips</label>
+<textarea id="pCare" rows="4" placeholder="Enter 3 care tips (one per line)"></textarea>
 
       <label>Image URL</label>
       <input id="pImage" placeholder="https://image-url">
@@ -394,13 +400,19 @@ body{margin:0;background:#f3f6f4}
 
 <script>
 /* ================= FIREBASE INIT ================= */
+/* ================= FIREBASE INIT (UPDATED) ================= */
 firebase.initializeApp({
-  apiKey:"AIzaSyBJXO-TsCpd0dlV5LO84RG0yJv2_zKFEoU",
-  authDomain:"money-plant-9b247.firebaseapp.com",
-  projectId:"money-plant-9b247"
+  apiKey: "AIzaSyCb3NMFbLCBPbbxA2C7J8uMJ5ME2vs-1l4",
+  authDomain: "instaplants2.firebaseapp.com",
+  projectId: "instaplants2",
+  storageBucket: "instaplants2.firebasestorage.app",
+  messagingSenderId: "547063766288",
+  appId: "1:547063766288:web:49f80da6f1a82fb2f75995",
+  measurementId: "G-F1FXSHHJXP"
 });
-const auth=firebase.auth();
-const db=firebase.firestore();
+
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 /* ================= GLOBALS ================= */
 let orders=[];
@@ -518,12 +530,14 @@ function loadOrders(){
 }
 
 /* ================= STATS ================= */
-  function updateStats(){
-  tTotal.innerText = orders.length;
-  tPending.innerText = orders.filter(o=>o.status==="pending").length;
-  tAccepted.innerText = orders.filter(o=>o.status==="accepted").length;
-  tShipped.innerText = orders.filter(o=>o.status==="shipped").length;
-  tDelivered.innerText = orders.filter(o=>o.status==="delivered").length;
+function updateStats() {
+  const active = orders.filter(o => o.status !== "cancelled");
+
+  tTotal.innerText = active.length;
+  tPending.innerText = active.filter(o => o.status === "pending").length;
+  tAccepted.innerText = active.filter(o => o.status === "accepted").length;
+  tShipped.innerText = active.filter(o => o.status === "shipped").length;
+  tDelivered.innerText = active.filter(o => o.status === "delivered").length;
 }
 
 /* ================= RENDER ================= */
@@ -557,13 +571,18 @@ function renderOrders(){
             ${(o.customer.name || "Unknown")} · ${(o.customer.phone || "N/A")}
           </span><br>
           <span class="${o.status}">${o.status.toUpperCase()}</span>
-        </div>
-<div class="btns">
+ <div class="btns">
   <button class="view" onclick="viewOrder('${o.id}')">View</button>
-  <button class="accept" onclick="updateStatus('${o.id}','accepted')">Accept</button>
-  <button class="ship" onclick="updateStatus('${o.id}','shipped')">Ship</button>
-  <button class="ship" onclick="updateStatus('${o.id}','delivered')">Delivered</button>
-  <button class="reject" onclick="updateStatus('${o.id}','rejected')">Reject</button>
+
+  ${o.status === "cancelled" ? `
+    <span class="rejected">❌ Cancelled</span>
+  ` : `
+    <button class="accept" onclick="updateStatus('${o.id}','accepted')">Accept</button>
+    <button class="ship" onclick="updateStatus('${o.id}','shipped')">Ship</button>
+    <button class="ship" onclick="updateStatus('${o.id}','delivered')">Delivered</button>
+    <button class="reject" onclick="updateStatus('${o.id}','rejected')">Reject</button>
+  `}
+
   <button class="delete" onclick="deleteOrder('${o.id}')">Delete</button>
 </div>
 
@@ -596,7 +615,7 @@ function downloadOrders(){
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = "greenleaf_orders.csv";
+  a.download = "instaplant_orders.csv";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -638,13 +657,22 @@ function sendWhatsApp(o, status) {
     return;
   }
 
-  // 🔧 Clean phone number (remove spaces, +, etc.)
   const phone = o.customer.phone.replace(/\D/g, "");
+  let message = "";
 
-  const message =
-    `Hello ${o.customer.name || "Customer"} 🌱\n` +
-    `Your GreenLeaf order (ORD-${o.id.slice(0, 8)}) has been ${status.toUpperCase()}.\n` +
-    `Thank you for shopping with GreenLeaf!`;
+  if (status === "rejected") {
+    message =
+      `Hello ${o.customer.name || "Customer"} 🌱\n` +
+      `We regret to inform you that your Instaplant order (ORD-${o.id.slice(0, 8)}) has been *REJECTED*.\n` +
+      `This may be due to stock unavailability or delivery constraints.\n\n` +
+      `For help, please contact our support.\n` +
+      `– Instaplant Team 🌿`;
+  } else {
+    message =
+      `Hello ${o.customer.name || "Customer"} 🌱\n` +
+      `Your Instaplant order (ORD-${o.id.slice(0, 8)}) has been *${status.toUpperCase()}*.\n` +
+      `Thank you for shopping with Instaplant! 🌿`;
+  }
 
   const url =
     "https://wa.me/91" +
@@ -654,7 +682,6 @@ function sendWhatsApp(o, status) {
 
   window.open(url, "_blank");
 }
-
 
 /* ================= UPDATE ================= */
 async function updateStatus(id,s){
@@ -699,19 +726,36 @@ db.collection("plants")
     });
     renderPlants();
   });
+const DEFAULT_IMAGES = {
+  indoor: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6",
+  outdoor: "https://images.unsplash.com/photo-1524594154908-edd18c7f1a1b",
+  succulent: "https://images.unsplash.com/photo-1509423350716-97f2360af34e",
+  flowering: "https://images.unsplash.com/photo-1498842812179-c81beecf902c",
+  plant: "https://images.unsplash.com/photo-1483794344563-d27a8d18014e"
+};
 
 
 /* ADD / UPDATE PLANT */
 async function addPlant(){
   try{
-  const plant = {
+const plant = {
   name: pName.value.trim(),
   price: Number(pPrice.value),
   stock: Number(pStock.value),
   category: pCategory.value.trim(),
-  image: pImage.value.trim(),
+  image:
+  pImage.value.trim() ||
+  DEFAULT_IMAGES[pCategory.value.trim().toLowerCase()] ||
+  DEFAULT_IMAGES.plant,
   description: pDesc.value.trim(),
-  sameDay: true   // ✅ SAME DAY DELIVERY FLAG
+careTips: pCare.value
+  .split("\n")        // each line admin types
+  .map(t => t.trim())
+  .filter(Boolean)
+  .slice(0, 3)        // 👈 ONLY 3 POINTS
+  .join(" || "),
+   // ✅ NEW
+  sameDay: true
 };
 
 
@@ -735,6 +779,7 @@ async function addPlant(){
     pStock.value = "";
     pCategory.value = "";
     pImage.value = "";
+    pCare.value = "";
 
     alert("✅ Plant saved successfully");
 
@@ -758,7 +803,9 @@ function renderPlants(){
         <div>
           <strong>${p.name}</strong>
           <span class="small">₹${p.price} · Stock: ${p.stock}</span><br>
-          <span class="small">${p.category}</span>
+          <span class="small">${p.category}</span><br>
+<span class="small">🌿 care: ${p.careTips || "—"}</span>
+
         </div>
         <div class="btns">
           <button class="view" onclick="editPlant('${p.id}')">Edit</button>
@@ -779,6 +826,8 @@ function editPlant(id){
   pStock.value = p.stock;
   pCategory.value = p.category;
   pImage.value = p.image;
+  pDesc.value = p.description || "";
+  pCare.value = p.careTips || "";
 }
 
 /* DELETE */
