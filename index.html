@@ -249,6 +249,20 @@ body{margin:0;background:#f3f6f4}
     font-size:.9rem;
   }
 }
+select {
+  width: 100%;
+  padding: .7rem;
+  margin-top: .3rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: .9rem;
+  outline: none;
+  background: white;
+}
+
+select:focus {
+  border-color: #1b5e20;
+}
 
 </style>
 </head>
@@ -364,9 +378,16 @@ body{margin:0;background:#f3f6f4}
 
       <label>Stock Quantity</label>
       <input id="pStock" type="number" placeholder="50">
+<label>Category</label>
+<select id="pCategory">
+  <option value="">Select Category</option>
+  <option value="indoor">Indoor</option>
+  <option value="outdoor">Outdoor</option>
+  <option value="succulent">Succulent</option>
+  <option value="flowering">Flowering</option>
+  <option value="hanging">Hanging</option>
+</select>
 
-      <label>Category</label>
-      <input id="pCategory" placeholder="Indoor / Outdoor">
       
       <label>Description</label>
 <input id="pDesc" placeholder="Short plant description">
